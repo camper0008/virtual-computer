@@ -1,0 +1,9 @@
+README
+
+=====
+
+A "virtual computer" that loads instruction files and runs them.
+
+16384 bytes of memory, with 80x24 terminal buffer in memory.
+
+Made as a project from boredom

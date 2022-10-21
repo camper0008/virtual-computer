@@ -1,0 +1,59 @@
+SPEC
+
+=====
+
+Operators:
+
+0 - fn noop()
+| noop # increments stack pointer
+
+1 - fn mov(dest: Addr, src: Addr)
+| mov &0x0 &0x1 # moves whatever's at memory address 0x1 to memory address 0x1
+
+2 - fn mov(dest: Addr, src: Int)
+| mov &0x0 0x1 # moves an int with value 1 into memory address 0
+
+3 - fn add(dest: Addr, src: Addr)
+| add &0x0 &0x1 # adds src address to dest address
+
+4 - fn sub(dest: Addr, src: Addr)
+| sub &0x0 &0x1 # subs src address from dest address
+
+5 - fn jmp(location: Addr)
+| jmp &0x1 # moves stack pointer to address 0x1
+
+6 - fn jnz(location: Addr, condition: Addr)
+| jnz &0x1 &0x2 # moves stack pointer to address 0x1 if address 0x2 is not zero
+
+7-255 - crash and burn exception
+
+===
+
+Notes:
+
+16384 bytes of memory
+writing out of memory bounds results in crash and burn exception
+
+bytes from [2048 + 0 + 80 * 0] - [2048 + 80 + 80 * 24] are rendered to the screen as chars using formula [2048 + x + 80 * y]
+
+whitespace before and after instruction is ignored, but if any non-whitespace uncommented lines are parsed after instructions, crash and burn exception
+there should only be one instruction per line
+unexpected or missing input from instruction results in crash and burn exception
+initial instructions are loaded into ram from [64..<64 + program length>]
+text after ; is ignored and treated as comments
+
+===
+
+Carry bits:
+
+if an add instruction is larger than 255, ram &0x0 will |= carry_bit, otherwise ram &0x0 will &= !carry_bit
+
+> It is, for binary systems, the same as a carry digit in decimal system.
+>
+> Like when you are doing a calculation
+>
+>  15
+> +17
+> ---
+>
+> You first add the 7+5, which is 12 - so you write “2” and remember that you are “carrying a 1” over to the next order.
