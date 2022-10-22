@@ -127,7 +127,7 @@ pub fn file(filename: &str) -> Vec<Instruction> {
             let unwrapped_line = line.unwrap();
             let mut words_iter = unwrapped_line
                 .split_whitespace()
-                .filter(|word| word.is_empty())
+                .filter(|word| !word.is_empty())
                 .map_while(|word| if word.contains(';') { None } else { Some(word) });
             let instruction = words_iter.next().expect("invalid line");
             match instruction {
