@@ -1,14 +1,14 @@
 mod def;
 mod parse;
+mod run;
 
 fn main() {
-    let mut mem: [u8; def::MEMORY_SIZE] = [0; def::MEMORY_SIZE];
-    let instructions = parse::file("examples/test");
+    let mut mem: [u16; def::MEMORY_SIZE] = [0; def::MEMORY_SIZE];
+    let instructions = parse::file("examples/hello");
     parse::instructions_into_bytes(instructions)
         .into_iter()
         .enumerate()
-        .for_each(|(i, value)| mem[i + def::STARTING_MEMORY] = value);
+        .for_each(|(i, value)| mem[i + def::INITIAL_OFFSET] = value);
 
-    let formatted_mem: Vec<u8> = mem.into_iter().skip(64).collect();
-    println!("{:?}", formatted_mem);
+    run::run(mem)
 }

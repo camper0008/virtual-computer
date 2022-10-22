@@ -1,4 +1,4 @@
-noop
+noop            ; no operation 
 mov &0x0 &0x1   ; moves whatever's at memory address 0x1 to memory address 0x1
 mov &0x0 0x1    ; moves an int with value 1 into memory address 0
 add &0x0 &0x1   ; adds src address to dest address

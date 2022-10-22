@@ -31,7 +31,7 @@ Operators:
 
 Notes:
 
-16384 bytes of memory
+16384 u16's of memory
 writing out of memory bounds results in crash and burn exception
 
 bytes from [2048 + 0 + 80 * 0] - [2048 + 80 + 80 * 24] are rendered to the screen as chars using formula [2048 + x + 80 * y]
@@ -46,7 +46,7 @@ text after ; is ignored and treated as comments
 
 Carry bits:
 
-if an add instruction is larger than 255, ram &0x0 will |= carry_bit, otherwise ram &0x0 will &= !carry_bit
+if an add instruction is larger than 16384, ram &0x0 will |= carry_bit, otherwise ram &0x0 will &= !carry_bit
 
 > It is, for binary systems, the same as a carry digit in decimal system.
 >

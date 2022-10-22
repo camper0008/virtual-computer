@@ -3,9 +3,9 @@ use crate::parse::Instruction::*;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-type Addr = u8;
-type Int = u8;
-type Value = u8;
+type Addr = u16;
+type Int = u16;
+type Value = u16;
 
 pub enum Instruction {
     Noop,
@@ -20,9 +20,9 @@ pub enum Instruction {
 impl Instruction {
     fn add_to_memory(
         self,
-        mut tokens: [u8; def::BOOTLOADING_SIZE],
+        mut tokens: [u16; def::BOOTLOADING_SIZE],
         mut pointer: usize,
-    ) -> ([u8; def::BOOTLOADING_SIZE], usize) {
+    ) -> ([u16; def::BOOTLOADING_SIZE], usize) {
         match self {
             Noop => {
                 pointer += 1;
@@ -89,7 +89,7 @@ impl Instruction {
     }
 }
 
-pub fn instructions_into_bytes(instructions: Vec<Instruction>) -> [u8; def::BOOTLOADING_SIZE] {
+pub fn instructions_into_bytes(instructions: Vec<Instruction>) -> [u16; def::BOOTLOADING_SIZE] {
     instructions
         .into_iter()
         .fold(
@@ -101,12 +101,12 @@ pub fn instructions_into_bytes(instructions: Vec<Instruction>) -> [u8; def::BOOT
 
 fn parse_hex_address(addr: &str) -> Addr {
     let without_prefix = addr.trim_start_matches("&0x");
-    u8::from_str_radix(without_prefix, 16).expect("invalid hex address")
+    u16::from_str_radix(without_prefix, 16).expect("invalid hex address")
 }
 
 fn parse_hex_int(value: &str) -> Int {
     let without_prefix = value.trim_start_matches("0x");
-    u8::from_str_radix(without_prefix, 16).expect("invalid hex value")
+    u16::from_str_radix(without_prefix, 16).expect("invalid hex value")
 }
 
 fn parse_hex_maybe_address(maybe: &str) -> (Value, bool) {
