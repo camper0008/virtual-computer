@@ -1,10 +1,13 @@
 use crate::def;
 use crate::parse::Instruction::*;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 type Addr = u8;
 type Int = u8;
+type Value = u8;
 
-enum Instruction {
+pub enum Instruction {
     Noop,
     MovA(Addr, Addr),
     MovB(Addr, Int),
@@ -86,25 +89,96 @@ impl Instruction {
     }
 }
 
-struct Parser {
-    filename: String,
-    instructions: Vec<Instruction>,
+pub fn instructions_into_bytes(instructions: Vec<Instruction>) -> [u8; def::BOOTLOADING_SIZE] {
+    instructions
+        .into_iter()
+        .fold(
+            ([0; def::BOOTLOADING_SIZE], 0usize),
+            |(acc_mem, acc_point), instruction| instruction.add_to_memory(acc_mem, acc_point),
+        )
+        .0
 }
 
-impl Parser {
-    fn new(filename: String) -> Self {
-        return Parser {
-            filename,
-            instructions: Vec::new(),
-        };
+fn parse_hex_address(addr: &str) -> Addr {
+    let without_prefix = addr.trim_start_matches("&0x");
+    u8::from_str_radix(without_prefix, 16).expect("invalid hex address")
+}
+
+fn parse_hex_int(value: &str) -> Int {
+    let without_prefix = value.trim_start_matches("0x");
+    u8::from_str_radix(without_prefix, 16).expect("invalid hex value")
+}
+
+fn parse_hex_maybe_address(maybe: &str) -> (Value, bool) {
+    if maybe.starts_with("&") {
+        (parse_hex_address(maybe), true)
+    } else {
+        (parse_hex_int(maybe), false)
     }
-    fn into_bytes(self) -> [u8; def::BOOTLOADING_SIZE] {
-        self.instructions
-            .into_iter()
-            .fold(
-                ([0; def::BOOTLOADING_SIZE], 0usize),
-                |(acc_mem, acc_point), instruction| instruction.add_to_memory(acc_mem, acc_point),
-            )
-            .0
-    }
+}
+
+pub fn file(filename: &str) -> Vec<Instruction> {
+    let file = File::open(filename).unwrap();
+    let reader = BufReader::new(file);
+
+    reader
+        .lines()
+        .map(|line| {
+            let unwrapped_line = line.unwrap();
+            let mut words_iter = unwrapped_line
+                .trim()
+                .split_whitespace()
+                .filter(|word| *word != "")
+                .map_while(|word| {
+                    if !word.contains(";") {
+                        Some(word)
+                    } else {
+                        None
+                    }
+                });
+            let instruction = words_iter.next().expect("invalid line");
+            match instruction {
+                "noop" => Instruction::Noop,
+                "mov" => {
+                    let dest =
+                        parse_hex_address(words_iter.next().expect("missing argument 1 for mov"));
+                    let (src, is_address) = parse_hex_maybe_address(
+                        words_iter.next().expect("missing argument 2 for mov"),
+                    );
+                    if is_address {
+                        Instruction::MovA(dest, src)
+                    } else {
+                        Instruction::MovB(dest, src)
+                    }
+                }
+                "add" => {
+                    let dest =
+                        parse_hex_address(words_iter.next().expect("missing argument 1 for add"));
+                    let src =
+                        parse_hex_address(words_iter.next().expect("missing argument 2 for add"));
+                    Add(dest, src)
+                }
+                "sub" => {
+                    let dest =
+                        parse_hex_address(words_iter.next().expect("missing argument 1 for sub"));
+                    let src =
+                        parse_hex_address(words_iter.next().expect("missing argument 2 for sub"));
+                    Sub(dest, src)
+                }
+                "jmp" => {
+                    let dest =
+                        parse_hex_address(words_iter.next().expect("missing argument 1 for jmp"));
+                    Jmp(dest)
+                }
+                "jnz" => {
+                    let dest =
+                        parse_hex_address(words_iter.next().expect("missing argument 1 for jnz"));
+                    let cond =
+                        parse_hex_address(words_iter.next().expect("missing argument 2 for jnz"));
+                    Jnz(dest, cond)
+                }
+                invalid_instruction => panic!("unrecognized instruction {invalid_instruction}"),
+            }
+        })
+        .collect()
 }
