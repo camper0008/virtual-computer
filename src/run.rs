@@ -9,9 +9,7 @@ fn render_memory(memory: &[u16; def::MEMORY_SIZE]) {
             })
         })
         .for_each(|col| {
-            for out in col {
-                print!("{out}");
-            }
+            col.for_each(|out| print!("{out}"));
             println!();
         });
 }
