@@ -18,8 +18,8 @@ noop ; jnz to 200
 mov &0x290 0x6    ; jnz
 mov &0x291 0x200  ; dest
 mov &0x292 0x402  ; cond
-noop ; jmp to 16347 (end of program)
+noop ; jmp to 16348 (end of program)
 mov &0x300 0x5     ; jmp
-mov &0x301 0x3FFF  ; dest
+mov &0x301 0x4000  ; dest
 noop ; begin
 jmp &0x200         ; jump to 0x200 so we know where we are 
