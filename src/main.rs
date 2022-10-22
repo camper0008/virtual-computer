@@ -4,7 +4,7 @@ mod run;
 
 fn main() {
     let mut mem: [u16; def::MEMORY_SIZE] = [0; def::MEMORY_SIZE];
-    let instructions = parse::file("examples/hello");
+    let instructions = parse::file("examples/count");
     parse::instructions_into_bytes(instructions)
         .into_iter()
         .enumerate()

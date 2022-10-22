@@ -29,7 +29,6 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
             6 jnz &0x1 &0x2 # moves stack pointer to address 0x1 if address 0x2 is not zero
             7-255 - crash and burn exception
             */
-            // noop
             0 => {
                 pc += 1;
             }
@@ -74,9 +73,11 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 pc += 1;
                 let dest = mem[pc] as usize;
                 pc += 1;
-                let cond = mem[pc];
+                let cond = mem[mem[pc] as usize];
                 if cond != 0 {
                     pc = dest;
+                } else {
+                    pc += 1;
                 }
             }
             invalid_instruction => {
