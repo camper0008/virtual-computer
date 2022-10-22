@@ -12,5 +12,5 @@ fn main() {
         .enumerate()
         .for_each(|(i, value)| mem[i + def::INITIAL_OFFSET] = value);
 
-    run::run(mem)
+    run::run(mem);
 }

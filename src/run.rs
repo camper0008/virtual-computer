@@ -1,18 +1,19 @@
 use crate::def;
 
 fn render_memory(memory: &[u16; def::MEMORY_SIZE]) {
-    let chars = (0..def::SCREEN_HEIGHT).map(|y| {
-        (0..def::SCREEN_WIDTH)
-            .map(move |x| memory[def::SCREEN_OFFSET + x + def::SCREEN_WIDTH * y])
-            .collect::<Vec<u16>>()
-    });
-
     print!("{esc}[1;1H", esc = 27 as char);
-    chars.for_each(|col| {
-        col.into_iter()
-            .for_each(|out| print!("{formatted}", formatted = out as u8 as char));
-        print!("\n");
-    });
+    (0..def::SCREEN_HEIGHT)
+        .map(|y| {
+            (0..def::SCREEN_WIDTH).map(move |x| {
+                (memory[def::SCREEN_OFFSET + x + def::SCREEN_WIDTH * y] % 255) as u8 as char
+            })
+        })
+        .for_each(|col| {
+            for out in col {
+                print!("{out}");
+            }
+            println!();
+        });
 }
 
 pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
@@ -74,10 +75,10 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let dest = mem[pc] as usize;
                 pc += 1;
                 let cond = mem[mem[pc] as usize];
-                if cond != 0 {
-                    pc = dest;
-                } else {
+                if cond == 0 {
                     pc += 1;
+                } else {
+                    pc = dest;
                 }
             }
             invalid_instruction => {

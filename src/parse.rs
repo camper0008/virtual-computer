@@ -1,5 +1,5 @@
 use crate::def;
-use crate::parse::Instruction::*;
+use crate::parse::Instruction::{Add, Jmp, Jnz, MovA, MovB, Noop, Sub};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -110,7 +110,7 @@ fn parse_hex_int(value: &str) -> Int {
 }
 
 fn parse_hex_maybe_address(maybe: &str) -> (Value, bool) {
-    if maybe.starts_with("&") {
+    if maybe.starts_with('&') {
         (parse_hex_address(maybe), true)
     } else {
         (parse_hex_int(maybe), false)
@@ -126,16 +126,9 @@ pub fn file(filename: &str) -> Vec<Instruction> {
         .map(|line| {
             let unwrapped_line = line.unwrap();
             let mut words_iter = unwrapped_line
-                .trim()
                 .split_whitespace()
-                .filter(|word| *word != "")
-                .map_while(|word| {
-                    if !word.contains(";") {
-                        Some(word)
-                    } else {
-                        None
-                    }
-                });
+                .filter(|word| word.is_empty())
+                .map_while(|word| if word.contains(';') { None } else { Some(word) });
             let instruction = words_iter.next().expect("invalid line");
             match instruction {
                 "noop" => Instruction::Noop,
