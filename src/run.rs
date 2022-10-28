@@ -14,6 +14,12 @@ fn render_memory(memory: &[u16; def::MEMORY_SIZE]) {
         });
 }
 
+fn check_and_rerender(addr: u16, mem: &[u16; def::MEMORY_SIZE]) {
+    if (2048..2048 + (80 * 24)).contains(&addr) {
+        render_memory(mem);
+    }
+}
+
 pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
     let mut pc = def::INITIAL_OFFSET;
     while pc < def::MEMORY_SIZE {
@@ -28,6 +34,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let src = mem[pc] as usize;
                 mem[dest] = mem[src];
                 pc += 1;
+                check_and_rerender(mem[dest], &mem);
             }
             2 => {
                 pc += 1;
@@ -36,6 +43,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let int = mem[pc];
                 mem[dest] = int;
                 pc += 1;
+                check_and_rerender(mem[dest], &mem);
             }
             3 => {
                 pc += 1;
@@ -44,6 +52,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let src = mem[pc] as usize;
                 mem[dest] = mem[dest].overflowing_add(mem[src]).0;
                 pc += 1;
+                check_and_rerender(mem[dest], &mem);
             }
             4 => {
                 pc += 1;
@@ -52,6 +61,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let src = mem[pc] as usize;
                 mem[dest] = mem[dest].overflowing_sub(mem[src]).0;
                 pc += 1;
+                check_and_rerender(mem[dest], &mem);
             }
             5 => {
                 pc += 1;
@@ -76,6 +86,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let src = mem[pc] as usize;
                 mem[dest] = mem[mem[src] as usize];
                 pc += 1;
+                check_and_rerender(mem[dest], &mem);
             }
             8 => {
                 pc += 1;
@@ -84,11 +95,11 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let src = mem[pc] as usize;
                 mem[mem[dest] as usize] = mem[src];
                 pc += 1;
+                check_and_rerender(mem[mem[dest] as usize], &mem);
             }
             invalid_instruction => {
                 panic!("invalid instruction {invalid_instruction} at memory {pc}")
             }
         }
-        render_memory(&mem);
     }
 }
