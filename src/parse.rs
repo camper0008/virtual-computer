@@ -132,28 +132,52 @@ fn parse_address(addr: &str) -> Addr {
         "r6" => 0x16u16,
         "r7" => 0x17u16,
         "r8" => 0x18u16,
-        _ => {
-            let without_prefix = addr.trim_start_matches("&0x");
+        invalid_addr if !invalid_addr.starts_with("&") => {
+            panic!("address must be prefixed with &");
+        }
+        hex if hex.starts_with("&0x") => {
+            let without_prefix = hex.trim_start_matches("&0x");
             u16::from_str_radix(without_prefix, 16).expect("invalid hex address")
+        }
+        dec => {
+            let without_prefix = dec.trim_start_matches("&");
+            u16::from_str_radix(without_prefix, 10).expect("invalid dec address")
         }
     }
 }
 
 fn parse_int(value: &str) -> Int {
-    let without_prefix = value.trim_start_matches("0x");
-    u16::from_str_radix(without_prefix, 16).expect("invalid hex value")
+    match value {
+        invalid_value if invalid_value.starts_with("&") => {
+            panic!("int must not be prefixed with &")
+        }
+        hex if hex.starts_with("0x") => {
+            let without_prefix = hex.trim_start_matches("0x");
+            u16::from_str_radix(without_prefix, 16).expect("invalid hex value")
+        }
+        dec => u16::from_str_radix(dec, 10).expect("invalid dec value"),
+    }
 }
 
 fn parse_maybe_address(maybe: &str) -> (Value, bool) {
-    if maybe.starts_with('&') {
+    if maybe.starts_with('&') || maybe.starts_with('r') {
         (parse_address(maybe), true)
     } else {
         (parse_int(maybe), false)
     }
 }
 
+fn unwrap_with_error<T>(res: Option<T>, error_msg: &'static str, line_number: usize) -> T {
+    match res {
+        Some(value) => value,
+        None => {
+            panic!("Error occurred on line {line_number}: '{error_msg}'");
+        }
+    }
+}
+
 pub fn file(filename: &str) -> Vec<Instruction> {
-    let file = File::open(filename).unwrap();
+    let file = File::open(filename).expect("unable to open file");
     let reader = BufReader::new(file);
 
     reader
@@ -170,20 +194,28 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     > 0
             }
         })
-        .map(|line| {
+        .enumerate()
+        .map(|(line_number, line)| {
             let unwrapped_line = line.unwrap();
             let mut words_iter = unwrapped_line
                 .split_whitespace()
                 .filter(|word| !word.is_empty())
                 .map_while(|word| if word.contains(';') { None } else { Some(word) });
-            let instruction = words_iter.next().unwrap();
+            let instruction =
+                unwrap_with_error(words_iter.next(), "invalid instruction", line_number);
             match instruction {
                 "noop" => Instruction::Noop,
                 "mov" => {
-                    let dest =
-                        parse_address(words_iter.next().expect("missing argument 1 for mov"));
-                    let (src, is_address) =
-                        parse_maybe_address(words_iter.next().expect("missing argument 2 for mov"));
+                    let dest = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 1 for mov",
+                        line_number,
+                    ));
+                    let (src, is_address) = parse_maybe_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 2 for mov",
+                        line_number,
+                    ));
                     if is_address {
                         Instruction::MovA(dest, src)
                     } else {
@@ -191,41 +223,76 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     }
                 }
                 "add" => {
-                    let dest =
-                        parse_address(words_iter.next().expect("missing argument 1 for add"));
-                    let src = parse_address(words_iter.next().expect("missing argument 2 for add"));
+                    let dest = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 1 for add",
+                        line_number,
+                    ));
+                    let src = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 2 for add",
+                        line_number,
+                    ));
                     Add(dest, src)
                 }
                 "sub" => {
-                    let dest =
-                        parse_address(words_iter.next().expect("missing argument 1 for sub"));
-                    let src = parse_address(words_iter.next().expect("missing argument 2 for sub"));
+                    let dest = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 1 for sub",
+                        line_number,
+                    ));
+                    let src = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 2 for sub",
+                        line_number,
+                    ));
                     Sub(dest, src)
                 }
                 "jmp" => {
-                    let dest =
-                        parse_address(words_iter.next().expect("missing argument 1 for jmp"));
+                    let dest = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 1 for jmp",
+                        line_number,
+                    ));
                     Jmp(dest)
                 }
                 "jnz" => {
-                    let dest =
-                        parse_address(words_iter.next().expect("missing argument 1 for jnz"));
-                    let cond =
-                        parse_address(words_iter.next().expect("missing argument 2 for jnz"));
+                    let dest = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 1 for jnz",
+                        line_number,
+                    ));
+                    let cond = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 2 for jnz",
+                        line_number,
+                    ));
                     Jnz(dest, cond)
                 }
                 "load" => {
-                    let dest =
-                        parse_address(words_iter.next().expect("missing argument 1 for load"));
-                    let src =
-                        parse_address(words_iter.next().expect("missing argument 2 for load"));
+                    let dest = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 1 for load",
+                        line_number,
+                    ));
+                    let src = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 2 for load",
+                        line_number,
+                    ));
                     Load(dest, src)
                 }
                 "store" => {
-                    let dest =
-                        parse_address(words_iter.next().expect("missing argument 1 for load"));
-                    let src =
-                        parse_address(words_iter.next().expect("missing argument 2 for load"));
+                    let dest = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 1 for load",
+                        line_number,
+                    ));
+                    let src = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 2 for load",
+                        line_number,
+                    ));
                     Store(dest, src)
                 }
                 invalid_instruction => panic!("unrecognized instruction {invalid_instruction}"),
