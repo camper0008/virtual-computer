@@ -20,6 +20,20 @@ fn check_and_rerender(addr: u16, mem: &[u16; def::MEMORY_SIZE]) {
     }
 }
 
+fn run_binary_instruction(
+    mem: &mut [u16; def::MEMORY_SIZE],
+    pc: &mut usize,
+    operation: fn(dest: u16, src: u16) -> u16,
+) {
+    *pc += 1;
+    let dest = mem[*pc] as usize;
+    *pc += 1;
+    let src = mem[*pc] as usize;
+    mem[dest] = operation(mem[dest], mem[src]);
+    *pc += 1;
+    check_and_rerender(dest as u16, &mem);
+}
+
 pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
     let mut pc = def::INITIAL_OFFSET;
     while pc < def::MEMORY_SIZE {
@@ -34,7 +48,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let src = mem[pc] as usize;
                 mem[dest] = mem[src];
                 pc += 1;
-                check_and_rerender(mem[dest], &mem);
+                check_and_rerender(dest as u16, &mem);
             }
             2 => {
                 pc += 1;
@@ -43,26 +57,34 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let int = mem[pc];
                 mem[dest] = int;
                 pc += 1;
-                check_and_rerender(mem[dest], &mem);
+                check_and_rerender(dest as u16, &mem);
             }
-            3 => {
-                pc += 1;
-                let dest = mem[pc] as usize;
-                pc += 1;
-                let src = mem[pc] as usize;
-                mem[dest] = mem[dest].overflowing_add(mem[src]).0;
-                pc += 1;
-                check_and_rerender(mem[dest], &mem);
+            3 => run_binary_instruction(&mut mem, &mut pc, |dest, src| dest.overflowing_add(src).0),
+            4 => run_binary_instruction(&mut mem, &mut pc, |dest, src| dest.overflowing_sub(src).0),
+            9 => run_binary_instruction(&mut mem, &mut pc, |dest, src| dest.overflowing_mul(src).0),
+            10 => {
+                run_binary_instruction(&mut mem, &mut pc, |dest, src| dest.overflowing_div(src).0)
             }
-            4 => {
-                pc += 1;
-                let dest = mem[pc] as usize;
-                pc += 1;
-                let src = mem[pc] as usize;
-                mem[dest] = mem[dest].overflowing_sub(mem[src]).0;
-                pc += 1;
-                check_and_rerender(mem[dest], &mem);
-            }
+            11 => run_binary_instruction(&mut mem, &mut pc, |dest, src| dest % src),
+            12 => run_binary_instruction(&mut mem, &mut pc, |dest, src| dest & src),
+            13 => run_binary_instruction(&mut mem, &mut pc, |dest, src| dest | src),
+            14 => run_binary_instruction(&mut mem, &mut pc, |dest, src| dest ^ src),
+            15 => run_binary_instruction(&mut mem, &mut pc, |dest, src| {
+                dest.overflowing_shl(src.into()).0
+            }),
+            16 => run_binary_instruction(&mut mem, &mut pc, |dest, src| {
+                dest.overflowing_shr(src.into()).0
+            }),
+            17 => run_binary_instruction(
+                &mut mem,
+                &mut pc,
+                |dest, src| if dest == src { 1 } else { 0 },
+            ),
+            18 => run_binary_instruction(
+                &mut mem,
+                &mut pc,
+                |dest, src| if dest < src { 1 } else { 0 },
+            ),
             5 => {
                 pc += 1;
                 let dest = mem[pc] as usize;
@@ -86,7 +108,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let src = mem[pc] as usize;
                 mem[dest] = mem[mem[src] as usize];
                 pc += 1;
-                check_and_rerender(mem[dest], &mem);
+                check_and_rerender(dest as u16, &mem);
             }
             8 => {
                 pc += 1;
@@ -95,7 +117,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let src = mem[pc] as usize;
                 mem[mem[dest] as usize] = mem[src];
                 pc += 1;
-                check_and_rerender(mem[mem[dest] as usize], &mem);
+                check_and_rerender(mem[dest], &mem);
             }
             invalid_instruction => {
                 panic!("invalid instruction {invalid_instruction} at memory {pc}")

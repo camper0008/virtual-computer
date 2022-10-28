@@ -1,5 +1,8 @@
 use crate::def;
-use crate::parse::Instruction::{Add, Jmp, Jnz, Load, MovA, MovB, Noop, Store, Sub};
+use crate::parse::Instruction::{
+    Add, And, Cmp, Div, Jmp, Jnz, Load, Lt, Mod, MovA, MovB, Mul, Noop, Or, Shl, Shr, Store, Sub,
+    Xor,
+};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -11,8 +14,18 @@ pub enum Instruction {
     Noop,
     MovA(Addr, Addr),
     MovB(Addr, Int),
+    And(Addr, Addr),
+    Or(Addr, Addr),
+    Xor(Addr, Addr),
     Add(Addr, Addr),
     Sub(Addr, Addr),
+    Mul(Addr, Addr),
+    Div(Addr, Addr),
+    Mod(Addr, Addr),
+    Shl(Addr, Addr),
+    Shr(Addr, Addr),
+    Cmp(Addr, Addr),
+    Lt(Addr, Addr),
     Jmp(Addr),
     Jnz(Addr, Addr),
     Load(Addr, Addr),
@@ -25,87 +38,34 @@ impl Instruction {
         mut tokens: [u16; def::BOOTLOADING_SIZE],
         mut pointer: usize,
     ) -> ([u16; def::BOOTLOADING_SIZE], usize) {
+        let mut put_into = |words: Vec<u16>| {
+            for word in words {
+                tokens[pointer] = word;
+                pointer += 1;
+            }
+        };
         match self {
             Noop => {
                 pointer += 1;
             }
-            MovA(dest, src) => {
-                tokens[pointer] = 1;
-                pointer += 1;
-
-                tokens[pointer] = dest;
-                pointer += 1;
-
-                tokens[pointer] = src;
-                pointer += 1;
-            }
-            MovB(dest, src) => {
-                tokens[pointer] = 2;
-                pointer += 1;
-
-                tokens[pointer] = dest;
-                pointer += 1;
-
-                tokens[pointer] = src;
-                pointer += 1;
-            }
-            Add(dest, src) => {
-                tokens[pointer] = 3;
-                pointer += 1;
-
-                tokens[pointer] = dest;
-                pointer += 1;
-
-                tokens[pointer] = src;
-                pointer += 1;
-            }
-            Sub(dest, src) => {
-                tokens[pointer] = 4;
-                pointer += 1;
-
-                tokens[pointer] = dest;
-                pointer += 1;
-
-                tokens[pointer] = src;
-                pointer += 1;
-            }
-            Jmp(dest) => {
-                tokens[pointer] = 5;
-                pointer += 1;
-
-                tokens[pointer] = dest;
-                pointer += 1;
-            }
-            Jnz(dest, cond) => {
-                tokens[pointer] = 6;
-                pointer += 1;
-
-                tokens[pointer] = dest;
-                pointer += 1;
-
-                tokens[pointer] = cond;
-                pointer += 1;
-            }
-            Load(dest, src) => {
-                tokens[pointer] = 7;
-                pointer += 1;
-
-                tokens[pointer] = dest;
-                pointer += 1;
-
-                tokens[pointer] = src;
-                pointer += 1;
-            }
-            Store(dest, src) => {
-                tokens[pointer] = 8;
-                pointer += 1;
-
-                tokens[pointer] = dest;
-                pointer += 1;
-
-                tokens[pointer] = src;
-                pointer += 1;
-            }
+            MovA(dest, src) => put_into(vec![1, dest, src]),
+            MovB(dest, src) => put_into(vec![2, dest, src]),
+            Add(dest, src) => put_into(vec![3, dest, src]),
+            Sub(dest, src) => put_into(vec![4, dest, src]),
+            Mul(dest, src) => put_into(vec![9, dest, src]),
+            Div(dest, src) => put_into(vec![10, dest, src]),
+            Mod(dest, src) => put_into(vec![11, dest, src]),
+            And(dest, src) => put_into(vec![12, dest, src]),
+            Or(dest, src) => put_into(vec![13, dest, src]),
+            Xor(dest, src) => put_into(vec![14, dest, src]),
+            Shl(dest, src) => put_into(vec![15, dest, src]),
+            Shr(dest, src) => put_into(vec![16, dest, src]),
+            Cmp(dest, src) => put_into(vec![17, dest, src]),
+            Lt(dest, src) => put_into(vec![18, dest, src]),
+            Jmp(dest) => put_into(vec![5, dest]),
+            Jnz(dest, cond) => put_into(vec![6, dest, cond]),
+            Load(dest, src) => put_into(vec![7, dest, src]),
+            Store(dest, src) => put_into(vec![8, dest, src]),
         };
         (tokens, pointer)
     }
@@ -176,6 +136,25 @@ fn unwrap_with_error<T>(res: Option<T>, error_msg: &'static str, line_number: us
     }
 }
 
+fn parse_binary_instruction(
+    dest_next: Option<&str>,
+    src_next: Option<&str>,
+    line_number: usize,
+    maker: fn(dest: Addr, src: Addr) -> Instruction,
+) -> Instruction {
+    let dest = parse_address(unwrap_with_error(
+        dest_next,
+        "missing argument 1",
+        line_number,
+    ));
+    let src = parse_address(unwrap_with_error(
+        src_next,
+        "missing argument 2",
+        line_number,
+    ));
+    maker(dest, src)
+}
+
 pub fn file(filename: &str) -> Vec<Instruction> {
     let file = File::open(filename).expect("unable to open file");
     let reader = BufReader::new(file);
@@ -222,32 +201,78 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                         Instruction::MovB(dest, src)
                     }
                 }
-                "add" => {
-                    let dest = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 1 for add",
-                        line_number,
-                    ));
-                    let src = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 2 for add",
-                        line_number,
-                    ));
-                    Add(dest, src)
-                }
-                "sub" => {
-                    let dest = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 1 for sub",
-                        line_number,
-                    ));
-                    let src = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 2 for sub",
-                        line_number,
-                    ));
-                    Sub(dest, src)
-                }
+                "add" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Add(dest, src),
+                ),
+                "sub" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Sub(dest, src),
+                ),
+                "mul" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Mul(dest, src),
+                ),
+                "div" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Div(dest, src),
+                ),
+                "mod" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Mod(dest, src),
+                ),
+                "and" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| And(dest, src),
+                ),
+                "or" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Or(dest, src),
+                ),
+                "xor" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Xor(dest, src),
+                ),
+                "shl" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Shl(dest, src),
+                ),
+                "shr" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Shr(dest, src),
+                ),
+                "cmp" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Cmp(dest, src),
+                ),
+                "lt" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    |dest, src| Lt(dest, src),
+                ),
                 "jmp" => {
                     let dest = parse_address(unwrap_with_error(
                         words_iter.next(),
@@ -269,15 +294,15 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     ));
                     Jnz(dest, cond)
                 }
-                "load" => {
+                "" => {
                     let dest = parse_address(unwrap_with_error(
                         words_iter.next(),
-                        "missing argument 1 for load",
+                        "missing argument 1 for ",
                         line_number,
                     ));
                     let src = parse_address(unwrap_with_error(
                         words_iter.next(),
-                        "missing argument 2 for load",
+                        "missing argument 2 for ",
                         line_number,
                     ));
                     Load(dest, src)
@@ -285,12 +310,12 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                 "store" => {
                     let dest = parse_address(unwrap_with_error(
                         words_iter.next(),
-                        "missing argument 1 for load",
+                        "missing argument 1 for ",
                         line_number,
                     ));
                     let src = parse_address(unwrap_with_error(
                         words_iter.next(),
-                        "missing argument 2 for load",
+                        "missing argument 2 for ",
                         line_number,
                     ));
                     Store(dest, src)
