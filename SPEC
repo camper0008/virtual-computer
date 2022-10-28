@@ -25,7 +25,13 @@ Operators:
 6 - fn jnz(location: Addr, condition: Addr)
 | jnz &0x1 &0x2 # moves stack pointer to address 0x1 if address 0x2 is not zero
 
-7-255 - crash and burn exception
+7 - fn load(dest: Addr, src: Addr)
+| load &0x0 &0x0 # ram[dest] = ram[ram[src]]
+
+8 - fn store(dest: Addr, src: Addr)
+| store &0x0 &0x0 # ram[ram[dest]] = ram[src]
+
+9-255 - crash and burn exception
 
 ===
 

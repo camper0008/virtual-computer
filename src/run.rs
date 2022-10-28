@@ -79,6 +79,22 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                     pc = dest;
                 }
             }
+            7 => {
+                pc += 1;
+                let dest = mem[pc] as usize;
+                pc += 1;
+                let src = mem[pc] as usize;
+                mem[dest] = mem[mem[src] as usize];
+                pc += 1;
+            }
+            8 => {
+                pc += 1;
+                let dest = mem[pc] as usize;
+                pc += 1;
+                let src = mem[pc] as usize;
+                mem[mem[dest] as usize] = mem[src];
+                pc += 1;
+            }
             invalid_instruction => {
                 panic!("invalid instruction {invalid_instruction} at memory {pc}")
             }
