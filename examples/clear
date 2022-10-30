@@ -1,38 +1,31 @@
-;   let i = 0
-;   let sbl = 2000
-;   while i < sbl
-;       let target = sbl + i
-;       *target = ' '
-;       i += 1
-;   i = r1
-;   sbl = r2
-;   target = r3
+;    let i    = r1 = 2048;
+;    let max  = r2 = 1920 + 2048 = 3968;
+;    let inc  = r3 = 1
+;    let char = r4 = '0'
+;    .loop
+;       mem[i] = '0' # 0 for test purposes
+;       i += inc;
+;       if (max-i != 0)
+;           goto .loop
+;       exit
 
-; 64 let i = 0
-mov r1 0
-
-; 67 let sbl = 2000
-mov r2 2000
-
-; 70 let target = sbl
+; 64 - let i = 2048
+mov r1 2048
+; 67 - let max = 3968
+mov r2 3968
+; 70 - let inc = 1
+mov r3 1
+; 73 - let char = 48 ('0')
+mov r4 48
+; 76 - mem[i] = char
+store r1 r4
+; 79 - i += inc
+add r1 r3
+; 82 - let temp = max
 mov ra r2
-
-; 73 target += i
-add ra r1
-
-; 76 *target = ' '
-mov r3 32
-store ra r3
-
-; 82 i += 1
-mov ra 1
-add r1 ra
-
-; 88: while i < sbl
-mov ra r2
+; 85 - temp -= i
 sub ra r1
-jnz &70 ra
-
-; 96: halt
-jmp &0x8000
-
+; 88 - goto line 76 if temp != 0
+jnz &76 ra
+; 91 - exit
+jmp &8000
