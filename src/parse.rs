@@ -246,44 +246,20 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     Jmp(dest)
                 }
                 "jnz" => {
-                    let dest = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 1 for jnz",
-                        line_number,
-                    ));
-                    let cond = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 2 for jnz",
-                        line_number,
-                    ));
-                    Jnz(dest, cond)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Jnz)
                 }
-                "load" => {
-                    let dest = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 1 for ",
-                        line_number,
-                    ));
-                    let src = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 2 for ",
-                        line_number,
-                    ));
-                    Load(dest, src)
-                }
-                "store" => {
-                    let dest = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 1 for ",
-                        line_number,
-                    ));
-                    let src = parse_address(unwrap_with_error(
-                        words_iter.next(),
-                        "missing argument 2 for ",
-                        line_number,
-                    ));
-                    Store(dest, src)
-                }
+                "load" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    Load,
+                ),
+                "store" => parse_binary_instruction(
+                    words_iter.next(),
+                    words_iter.next(),
+                    line_number,
+                    Store,
+                ),
                 invalid_instruction => panic!("unrecognized instruction {invalid_instruction}"),
             }
         })
