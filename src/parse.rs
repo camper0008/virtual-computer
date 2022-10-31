@@ -294,7 +294,7 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     ));
                     Jnz(dest, cond)
                 }
-                "" => {
+                "load" => {
                     let dest = parse_address(unwrap_with_error(
                         words_iter.next(),
                         "missing argument 1 for ",
