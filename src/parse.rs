@@ -92,7 +92,7 @@ fn parse_address(addr: &str) -> Addr {
         "r6" => 0x16u16,
         "r7" => 0x17u16,
         "r8" => 0x18u16,
-        invalid_addr if !invalid_addr.starts_with("&") => {
+        invalid_addr if !invalid_addr.starts_with('&') => {
             panic!("address must be prefixed with &");
         }
         hex if hex.starts_with("&0x") => {
@@ -100,22 +100,22 @@ fn parse_address(addr: &str) -> Addr {
             u16::from_str_radix(without_prefix, 16).expect("invalid hex address")
         }
         dec => {
-            let without_prefix = dec.trim_start_matches("&");
-            u16::from_str_radix(without_prefix, 10).expect("invalid dec address")
+            let without_prefix = dec.trim_start_matches('&');
+            without_prefix.parse::<u16>().expect("invalid dec address")
         }
     }
 }
 
 fn parse_int(value: &str) -> Int {
     match value {
-        invalid_value if invalid_value.starts_with("&") => {
+        invalid_value if invalid_value.starts_with('&') => {
             panic!("int must not be prefixed with &")
         }
         hex if hex.starts_with("0x") => {
             let without_prefix = hex.trim_start_matches("0x");
             u16::from_str_radix(without_prefix, 16).expect("invalid hex value")
         }
-        dec => u16::from_str_radix(dec, 10).expect("invalid dec value"),
+        dec => dec.parse::<u16>().expect("invalid dec value"),
     }
 }
 
@@ -201,78 +201,42 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                         Instruction::MovB(dest, src)
                     }
                 }
-                "add" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Add(dest, src),
-                ),
-                "sub" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Sub(dest, src),
-                ),
-                "mul" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Mul(dest, src),
-                ),
-                "div" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Div(dest, src),
-                ),
-                "mod" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Mod(dest, src),
-                ),
-                "and" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| And(dest, src),
-                ),
-                "or" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Or(dest, src),
-                ),
-                "xor" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Xor(dest, src),
-                ),
-                "shl" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Shl(dest, src),
-                ),
-                "shr" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Shr(dest, src),
-                ),
-                "cmp" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Cmp(dest, src),
-                ),
-                "lt" => parse_binary_instruction(
-                    words_iter.next(),
-                    words_iter.next(),
-                    line_number,
-                    |dest, src| Lt(dest, src),
-                ),
+                "add" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Add)
+                }
+                "sub" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Sub)
+                }
+                "mul" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Mul)
+                }
+                "div" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Div)
+                }
+                "mod" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Mod)
+                }
+                "and" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, And)
+                }
+                "or" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Or)
+                }
+                "xor" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Xor)
+                }
+                "shl" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Shl)
+                }
+                "shr" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Shr)
+                }
+                "cmp" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Cmp)
+                }
+                "lt" => {
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Lt)
+                }
                 "jmp" => {
                     let dest = parse_address(unwrap_with_error(
                         words_iter.next(),
