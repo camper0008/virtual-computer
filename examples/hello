@@ -1,15 +1,12 @@
-noop                ; 0x800 = 2048, the video offset
-mov &0x800 0x48     ; move 0x48 ('H' in ascii)
-mov &0x801 0x65     ; move 0x65 ('e' in ascii)
-mov &0x802 0x6C     ; move 0x6C ('l' in ascii)
-mov &0x803 &0x802   ; move (copy) what is now at address 0x802 to address 0x803
-mov &0x804 0x6F     ; move 0x6F ('o' in ascii)
-mov &0x805 0x20     ; move 0x6F (' ' in ascii)
-mov &0x806 0x57     ; move 0x57 ('W' in ascii)
-mov &0x807 0x6F     ; move 0x6F ('o' in ascii)
-mov &0x808 0x72     ; move 0x72 ('r' in ascii)
-mov &0x809 0x6C     ; move 0x6C ('l' in ascii)
-mov &0x80A 0x64     ; move 0x64 ('d' in ascii)
-noop                ; move back to 64
-mov &0x7FE 0x05     ; move 0x5  (jump instruction) to video offset -2
-mov &0x7FF 0x40     ; move 0x40 (jump instruction arg 1) to video offset -1
+mov &0x800 72   ; 'H' in ascii
+mov &0x801 101  ; 'e' in ascii
+mov &0x802 108  ; 'l' in ascii
+mov &0x803 108  ; 'l' in ascii
+mov &0x804 111  ; 'o' in ascii
+mov &0x805 32   ; ' ' in ascii
+mov &0x806 87   ; 'W' in ascii
+mov &0x807 111  ; 'o' in ascii
+mov &0x808 114  ; 'r' in ascii
+mov &0x809 108  ; 'l' in ascii
+mov &0x80A 100  ; 'd' in ascii
+jmp 0x8000
