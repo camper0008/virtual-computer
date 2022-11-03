@@ -1,0 +1,13 @@
+mov r1 48       ; 64
+mov r2 6        ; 67
+mov r3 1        ; 70
+sub r2 r3       ; 73
+mov ra r2       ; 76
+add ra r1       ; 79
+mov &2048 ra    ; 82
+mov r4 1000     ; 85
+mov &2049 0     ; 88 force rerender to slow it down
+sub r4 r3       ; 91
+jnz 88 r4       ; 94
+jnz 73 r2       ; 97
+jmp 32000       ; 100
