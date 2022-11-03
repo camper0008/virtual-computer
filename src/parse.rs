@@ -1,8 +1,5 @@
 use crate::def;
-use crate::parse::Instruction::{
-    Add, And, Cmp, Div, Jmp, Jnz, Load, Lt, Mod, MovA, MovB, Mul, Noop, Or, Shl, Shr, Store, Sub,
-    Xor,
-};
+use crate::parse::Instruction as Inst;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -26,8 +23,10 @@ pub enum Instruction {
     Shr(Addr, Addr),
     Cmp(Addr, Addr),
     Lt(Addr, Addr),
-    Jmp(Addr),
-    Jnz(Addr, Addr),
+    JmpA(Int),
+    JnzA(Int, Addr),
+    JmpB(Addr),
+    JnzB(Addr, Addr),
     Load(Addr, Addr),
     Store(Addr, Addr),
 }
@@ -45,27 +44,29 @@ impl Instruction {
             }
         };
         match self {
-            Noop => {
-                pointer += 1;
-            }
-            MovA(dest, src) => put_into(vec![1, dest, src]),
-            MovB(dest, src) => put_into(vec![2, dest, src]),
-            Add(dest, src) => put_into(vec![3, dest, src]),
-            Sub(dest, src) => put_into(vec![4, dest, src]),
-            Mul(dest, src) => put_into(vec![9, dest, src]),
-            Div(dest, src) => put_into(vec![10, dest, src]),
-            Mod(dest, src) => put_into(vec![11, dest, src]),
-            And(dest, src) => put_into(vec![12, dest, src]),
-            Or(dest, src) => put_into(vec![13, dest, src]),
-            Xor(dest, src) => put_into(vec![14, dest, src]),
-            Shl(dest, src) => put_into(vec![15, dest, src]),
-            Shr(dest, src) => put_into(vec![16, dest, src]),
-            Cmp(dest, src) => put_into(vec![17, dest, src]),
-            Lt(dest, src) => put_into(vec![18, dest, src]),
-            Jmp(dest) => put_into(vec![5, dest]),
-            Jnz(dest, cond) => put_into(vec![6, dest, cond]),
-            Load(dest, src) => put_into(vec![7, dest, src]),
-            Store(dest, src) => put_into(vec![8, dest, src]),
+           Inst::Noop => {
+               pointer += 1;
+           }
+           Inst::MovA(dest, src) => put_into(vec![1, dest, src]),
+           Inst::MovB(dest, src) => put_into(vec![2, dest, src]),
+           Inst::Add(dest, src) => put_into(vec![3, dest, src]),
+           Inst::Sub(dest, src) => put_into(vec![4, dest, src]),
+           Inst::Mul(dest, src) => put_into(vec![9, dest, src]),
+           Inst::Div(dest, src) => put_into(vec![10, dest, src]),
+           Inst::Mod(dest, src) => put_into(vec![11, dest, src]),
+           Inst::And(dest, src) => put_into(vec![12, dest, src]),
+           Inst::Or(dest, src) => put_into(vec![13, dest, src]),
+           Inst::Xor(dest, src) => put_into(vec![14, dest, src]),
+           Inst::Shl(dest, src) => put_into(vec![15, dest, src]),
+           Inst::Shr(dest, src) => put_into(vec![16, dest, src]),
+           Inst::Cmp(dest, src) => put_into(vec![17, dest, src]),
+           Inst::Lt(dest, src) => put_into(vec![18, dest, src]),
+           Inst::JmpA(dest) => put_into(vec![5, dest]),
+           Inst::JnzA(dest, cond) => put_into(vec![6, dest, cond]),
+           Inst::JmpB(dest) => put_into(vec![19, dest]),
+           Inst::JnzB(dest, cond) => put_into(vec![20, dest, cond]),
+           Inst::Load(dest, src) => put_into(vec![7, dest, src]),
+           Inst::Store(dest, src) => put_into(vec![8, dest, src]),
         };
         (tokens, pointer)
     }
@@ -202,63 +203,84 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     }
                 }
                 "add" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Add)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Add)
                 }
                 "sub" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Sub)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Sub)
                 }
                 "mul" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Mul)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Mul)
                 }
                 "div" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Div)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Div)
                 }
                 "mod" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Mod)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Mod)
                 }
                 "and" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, And)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::And)
                 }
                 "or" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Or)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Or)
                 }
                 "xor" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Xor)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Xor)
                 }
                 "shl" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Shl)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Shl)
                 }
                 "shr" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Shr)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Shr)
                 }
                 "cmp" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Cmp)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Cmp)
                 }
                 "lt" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Lt)
+                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Inst::Lt)
                 }
                 "jmp" => {
-                    let dest = parse_address(unwrap_with_error(
+                    let (dest, is_address) = parse_maybe_address(unwrap_with_error(
                         words_iter.next(),
-                        "missing argument 1 for jmp",
+                        "missing argument 1",
                         line_number,
                     ));
-                    Jmp(dest)
+
+                    if is_address {
+                        Inst::JmpB(dest)
+                    } else {
+                        Inst::JmpA(dest)
+                    }
                 }
                 "jnz" => {
-                    parse_binary_instruction(words_iter.next(), words_iter.next(), line_number, Jnz)
+                    let (dest, is_address) = parse_maybe_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 1",
+                        line_number,
+                    ));
+
+                    let cond = parse_address(unwrap_with_error(
+                        words_iter.next(),
+                        "missing argument 2",
+                        line_number,
+                    ));
+
+                    if is_address {
+                        Inst::JnzB(dest, cond)
+                    } else {
+                        Inst::JnzA(dest, cond)
+                    }
                 }
                 "load" => parse_binary_instruction(
                     words_iter.next(),
                     words_iter.next(),
                     line_number,
-                    Load,
+                    Inst::Load,
                 ),
                 "store" => parse_binary_instruction(
                     words_iter.next(),
                     words_iter.next(),
                     line_number,
-                    Store,
+                    Inst::Store,
                 ),
                 invalid_instruction => panic!("unrecognized instruction {invalid_instruction}"),
             }

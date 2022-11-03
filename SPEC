@@ -20,10 +20,10 @@ Operators:
 | sub &0x0 &0x1 # subs src address from dest address
 
 5 - fn jmp(location: Addr)
-| jmp &0x1 # moves stack pointer to address 0x1
+| jmp 0x1 # moves stack pointer to address 0x1
 
 6 - fn jnz(location: Addr, condition: Addr)
-| jnz &0x1 &0x2 # moves stack pointer to address 0x1 if address 0x2 is not zero
+| jnz 0x1 &0x2 # moves stack pointer to address 0x1 if address 0x2 is not zero
 
 7 - fn load(dest: Addr, src: Addr)
 | load &0x0 &0x0 # ram[dest] = ram[ram[src]]
@@ -60,6 +60,12 @@ Operators:
 
 18 - fn lt(dest: Addr, src: Addr)
 | lt &0x0 &0x1 # dest = dest < src ? 1 : 0
+
+19 - fn jmp(location: Addr)
+| jmp &0x1 # moves stack pointer to address at address 0x1
+
+20 - fn jnz(location: Addr, condition: Addr)
+| jnz &0x1 &0x2 # moves stack pointer to address at address 0x1 if address 0x2 is not zero
 
 _ => crash and burn exception
 
