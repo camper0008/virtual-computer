@@ -1,0 +1,57 @@
+; compiled with use of danskc assembler (https://github.com/SimonFJ20/langdev/tree/main/danskc/virtual-computer)
+noop 
+noop 
+noop 
+noop 
+noop 
+mov ra 0
+mov r1 1
+mov &64 ra
+add ra r1
+mov &65 ra
+add ra r1
+mov &66 ra
+add ra r1
+mov &67 ra
+mov r6 4096
+mov r7 r6
+mov r5 110
+store r6 r5
+jmp 166
+jmp 209
+noop 
+noop 
+add r6 &65
+store r6 r7
+mov r7 r6
+mov r2 2048
+mov r3 3967
+mov ra r3
+lt ra r2
+jnz 149 ra
+mov ra 65
+store r2 ra
+add r2 &65
+jmp 129
+mov r6 r7
+load r7 r6
+sub r6 &65
+load r5 r6
+sub r6 &65
+jmp r5
+add r6 &65
+store r6 r7
+mov r7 r6
+mov &112 2048
+mov &113 1920
+add r6 &65
+mov r5 192
+store r6 r5
+jmp 114
+mov r6 r7
+load r7 r6
+sub r6 &65
+load r5 r6
+sub r6 &65
+jmp r5
+jmp 16384
