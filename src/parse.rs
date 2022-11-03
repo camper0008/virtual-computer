@@ -10,7 +10,7 @@ type Value = u16;
 pub enum Instruction {
     Noop,
     MovA(Addr, Addr),
-    MovB(Addr, Int),
+    MovI(Addr, Int),
     And(Addr, Addr),
     Or(Addr, Addr),
     Xor(Addr, Addr),
@@ -23,10 +23,10 @@ pub enum Instruction {
     Shr(Addr, Addr),
     Cmp(Addr, Addr),
     Lt(Addr, Addr),
-    JmpA(Int),
-    JnzA(Int, Addr),
-    JmpB(Addr),
-    JnzB(Addr, Addr),
+    JmpA(Addr),
+    JnzA(Addr, Addr),
+    JmpI(Int),
+    JnzI(Int, Addr),
     Load(Addr, Addr),
     Store(Addr, Addr),
 }
@@ -48,7 +48,7 @@ impl Instruction {
                pointer += 1;
            }
            Inst::MovA(dest, src) => put_into(vec![1, dest, src]),
-           Inst::MovB(dest, src) => put_into(vec![2, dest, src]),
+           Inst::MovI(dest, src) => put_into(vec![2, dest, src]),
            Inst::Add(dest, src) => put_into(vec![3, dest, src]),
            Inst::Sub(dest, src) => put_into(vec![4, dest, src]),
            Inst::Mul(dest, src) => put_into(vec![9, dest, src]),
@@ -61,10 +61,10 @@ impl Instruction {
            Inst::Shr(dest, src) => put_into(vec![16, dest, src]),
            Inst::Cmp(dest, src) => put_into(vec![17, dest, src]),
            Inst::Lt(dest, src) => put_into(vec![18, dest, src]),
-           Inst::JmpA(dest) => put_into(vec![5, dest]),
-           Inst::JnzA(dest, cond) => put_into(vec![6, dest, cond]),
-           Inst::JmpB(dest) => put_into(vec![19, dest]),
-           Inst::JnzB(dest, cond) => put_into(vec![20, dest, cond]),
+           Inst::JmpI(dest) => put_into(vec![5, dest]),
+           Inst::JnzI(dest, cond) => put_into(vec![6, dest, cond]),
+           Inst::JmpA(dest) => put_into(vec![19, dest]),
+           Inst::JnzA(dest, cond) => put_into(vec![20, dest, cond]),
            Inst::Load(dest, src) => put_into(vec![7, dest, src]),
            Inst::Store(dest, src) => put_into(vec![8, dest, src]),
         };
@@ -199,7 +199,7 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     if is_address {
                         Instruction::MovA(dest, src)
                     } else {
-                        Instruction::MovB(dest, src)
+                        Instruction::MovI(dest, src)
                     }
                 }
                 "add" => {
@@ -246,9 +246,9 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     ));
 
                     if is_address {
-                        Inst::JmpB(dest)
-                    } else {
                         Inst::JmpA(dest)
+                    } else {
+                        Inst::JmpI(dest)
                     }
                 }
                 "jnz" => {
@@ -265,9 +265,9 @@ pub fn file(filename: &str) -> Vec<Instruction> {
                     ));
 
                     if is_address {
-                        Inst::JnzB(dest, cond)
-                    } else {
                         Inst::JnzA(dest, cond)
+                    } else {
+                        Inst::JnzI(dest, cond)
                     }
                 }
                 "load" => parse_binary_instruction(
