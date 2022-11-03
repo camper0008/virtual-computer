@@ -26,6 +26,6 @@ mov ra r2
 ; 85 - temp -= i
 sub ra r1
 ; 88 - goto line 76 if temp != 0
-jnz &76 ra
+jnz 76 ra
 ; 91 - exit
-jmp &8000
+jmp 8000
