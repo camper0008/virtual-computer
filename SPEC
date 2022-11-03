@@ -31,7 +31,37 @@ Operators:
 8 - fn store(dest: Addr, src: Addr)
 | store &0x0 &0x0 # ram[ram[dest]] = ram[src]
 
-9-255 - crash and burn exception
+9 - fn mul(dest: Addr, src: Addr)
+| mul &0x0 &0x1 # multiplies dest address by src address
+
+10 - fn div(dest: Addr, src: Addr)
+| div &0x0 &0x1 # divides dest address by src address
+
+11 - fn mod(dest: Addr, src: Addr)
+| mod &0x0 &0x1 # dest %= src
+
+12 - fn and(dest: Addr, src: Addr)
+| and &0x0 &0x1 # dest &= src
+
+13 - fn or(dest: Addr, src: Addr)
+| or &0x0 &0x1 # dest |= src
+
+14 - fn xor(dest: Addr, src: Addr)
+| xor &0x0 &0x1 # dest ^= src
+
+15 - fn shl(dest: Addr, src: Addr)
+| shl &0x0 &0x1 # dest << src
+
+16 - fn shr(dest: Addr, src: Addr)
+| shr &0x0 &0x1 # dest >> src
+
+17 - fn cmp(dest: Addr, src: Addr)
+| cmp &0x0 &0x1 # dest = dest == src ? 1 : 0
+
+18 - fn lt(dest: Addr, src: Addr)
+| lt &0x0 &0x1 # dest = dest < src ? 1 : 0
+
+_ => crash and burn exception
 
 ===
 
