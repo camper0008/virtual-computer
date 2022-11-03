@@ -1,13 +1,13 @@
-;    let i    = r1 = 2048;
-;    let max  = r2 = 1920 + 2048 = 3968;
-;    let inc  = r3 = 1
-;    let char = r4 = '0'
-;    .loop
-;       mem[i] = '0' # 0 for test purposes
-;       i += inc;
-;       if (max-i != 0)
-;           goto .loop
-;       exit
+;let i    = r1 = 2048;
+;let max  = r2 = 1920 + 2048 = 3968;
+;let inc  = r3 = 1
+;let char = r4 = '0'
+;.loop
+;   mem[i] = '0' # 0 for test purposes
+;   i += inc;
+;   if (max-i != 0)
+;       goto .loop
+;   exit
 
 ; 64 - let i = 2048
 mov r1 2048
@@ -28,4 +28,4 @@ sub ra r1
 ; 88 - goto line 76 if temp != 0
 jnz 76 ra
 ; 91 - exit
-jmp 8000
+jmp 0x8000
