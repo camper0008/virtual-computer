@@ -41,15 +41,7 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
             0 => {
                 pc += 1;
             }
-            1 => {
-                pc += 1;
-                let dest = mem[pc] as usize;
-                pc += 1;
-                let src = mem[pc] as usize;
-                mem[dest] = mem[src];
-                pc += 1;
-                check_and_rerender(dest as u16, &mem);
-            }
+            1 => run_binary_instruction(&mut mem, &mut pc, |_dest, src| src),
             2 => {
                 pc += 1;
                 let dest = mem[pc] as usize;
