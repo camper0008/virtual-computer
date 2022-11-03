@@ -90,6 +90,11 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                 let dest = mem[pc] as usize;
                 pc = dest;
             }
+            19 => {
+                pc += 1;
+                let dest = mem[pc] as usize;
+                pc = mem[dest] as usize;
+            }
             6 => {
                 pc += 1;
                 let dest = mem[pc] as usize;
@@ -99,6 +104,17 @@ pub fn run(mut mem: [u16; def::MEMORY_SIZE]) {
                     pc += 1;
                 } else {
                     pc = dest;
+                }
+            }
+            20 => {
+                pc += 1;
+                let dest = mem[pc] as usize;
+                pc += 1;
+                let cond = mem[mem[pc] as usize];
+                if cond == 0 {
+                    pc += 1;
+                } else {
+                    pc = mem[dest] as usize;
                 }
             }
             7 => {
